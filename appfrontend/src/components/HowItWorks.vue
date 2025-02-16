@@ -122,11 +122,9 @@
       </div>
     </section>
   </div>
-  <Footer />
 </template>
 
 <script>
-import Footer from './Footer.vue'
 import Icon from './Icons.vue'
 import grande1Img from '../components/assets/grande1.jpg'
 import grande2Img from '../components/assets/grande2.jpg'
@@ -135,8 +133,7 @@ import grande3Img from '../components/assets/grande3.jpg'
 export default {
   name: 'HowItWorks',
   components: {
-    Icon,
-    Footer
+    Icon
   },
   data() {
     return {

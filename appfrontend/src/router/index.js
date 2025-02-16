@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { requireAuth, redirectIfAuthenticated } from '../middleware/auth'
 import Home from '../components/Home.vue'
 import Login from '../components/Login.vue'
 import Register from '../components/Register.vue'
@@ -18,12 +19,14 @@ const routes = [
   {
     path: '/login',
     name: 'Login',
-    component: Login
+    component: Login,
+    beforeEnter: redirectIfAuthenticated
   },
   {
     path: '/register',
     name: 'Register',
-    component: Register
+    component: Register,
+    beforeEnter: redirectIfAuthenticated
   },
   {
     path: '/about',
@@ -38,12 +41,14 @@ const routes = [
   {
     path: '/content',
     name: 'Content',
-    component: Content
+    component: Content,
+    beforeEnter: requireAuth
   },
   {
     path: '/recipes',
     name: 'Recipes',
-    component: Recipes
+    component: Recipes,
+    beforeEnter: requireAuth
   },
   {
     path: '/contact',

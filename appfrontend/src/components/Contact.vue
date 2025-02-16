@@ -200,18 +200,15 @@
       </div>
     </section>
   </div>
-  <Footer />
 </template>
 
 <script>
-import Footer from './Footer.vue'
 import Icon from './Icons.vue'
 
 export default {
   name: 'Contact',
   components: {
-    Icon,
-    Footer
+    Icon
   },
   data() {
     return {

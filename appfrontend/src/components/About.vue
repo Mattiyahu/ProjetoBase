@@ -126,11 +126,9 @@
       </div>
     </section>
   </div>
-  <Footer />
 </template>
 
 <script>
-import Footer from './Footer.vue'
 import Icon from './Icons.vue'
 import aboutImg1 from '../components/assets/brain.jpg'
 import pequeno1Img from '../components/assets/pequeno1.jpg'
@@ -140,8 +138,7 @@ import pequeno3Img from '../components/assets/pequeno3.jpg'
 export default {
   name: 'About',
   components: {
-    Icon,
-    Footer
+    Icon
   },
   data() {
     return {

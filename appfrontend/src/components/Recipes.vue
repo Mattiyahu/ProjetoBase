@@ -211,11 +211,9 @@
       </div>
     </div>
   </div>
-  <Footer />
 </template>
 
 <script>
-import Footer from './Footer.vue'
 import Icon from './Icons.vue'
 import grande1Img from '../components/assets/grande1.jpg'
 import grande2Img from '../components/assets/grande2.jpg'
@@ -227,8 +225,7 @@ import pequeno3Img from '../components/assets/pequeno3.jpg'
 export default {
   name: 'Recipes',
   components: {
-    Icon,
-    Footer
+    Icon
   },
   data() {
     return {
