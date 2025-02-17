@@ -1,48 +1,66 @@
-import { defineStore } from 'pinia'
+// src/stores/userStore.js
+import { defineStore } from 'pinia';
 
 export const useUserStore = defineStore('user', {
   state: () => ({
     user: null,
-    isAuthenticated: false,
-    isLoading: false,
-    loadingCallbacks: []
+    token: null,
+    loading: false,
+    loadingCallbacks: [],
   }),
-
+  getters: {
+    isAuthenticated: (state) => !!state.user,
+    isLoading: (state) => state.loading,
+  },
   actions: {
     setUser(user) {
-      this.user = user
-      this.isAuthenticated = !!user
-    },
-
-    clearUser() {
-      this.user = null
-      this.isAuthenticated = false
-    },
-
-    setLoading(loading) {
-      this.isLoading = loading
-      if (!loading) {
-        // Execute and clear all loading callbacks
-        this.loadingCallbacks.forEach(callback => callback())
-        this.loadingCallbacks = []
+      this.user = user;
+      if (user) {
+        localStorage.setItem('user', JSON.stringify(user));
+      } else {
+        localStorage.removeItem('user');
       }
     },
-
-    onLoadingComplete(callback) {
-      if (!this.isLoading) {
-        // If not loading, execute callback immediately
-        callback()
+    setToken(token) {
+      this.token = token;
+      if (token) {
+        localStorage.setItem('auth_token', token);
       } else {
-        // Otherwise, queue the callback
-        this.loadingCallbacks.push(callback)
+        localStorage.removeItem('auth_token');
+      }
+    },
+    clearUser() {
+      this.user = null;
+      this.token = null;
+      localStorage.removeItem('user');
+      localStorage.removeItem('auth_token');
+    },
+    setLoading(value) {
+      this.loading = value;
+      if (!value) {
+        // When loading completes, execute all callbacks
+        this.loadingCallbacks.forEach(callback => callback());
+        this.loadingCallbacks = [];
+      }
+    },
+    onLoadingComplete(callback) {
+      if (!this.loading) {
+        // If not loading, execute immediately
+        callback();
+      } else {
+        // Otherwise, queue for execution when loading completes
+        this.loadingCallbacks.push(callback);
+      }
+    },
+    initialize() {
+      const savedUser = localStorage.getItem('user');
+      const savedToken = localStorage.getItem('auth_token');
+      if (savedUser) {
+        this.user = JSON.parse(savedUser);
+      }
+      if (savedToken) {
+        this.token = savedToken;
       }
     }
   },
-
-  getters: {
-    // Add getters if needed
-    getUserProfile: (state) => state.user,
-    getAuthStatus: (state) => state.isAuthenticated,
-    getLoadingStatus: (state) => state.isLoading
-  }
-})
+});
