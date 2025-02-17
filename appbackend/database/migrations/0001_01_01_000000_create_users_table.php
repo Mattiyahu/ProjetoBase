@@ -13,17 +13,23 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('first_name')->nullable(); // Adicionado
+            $table->string('last_name')->nullable();  // Adicionado
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password')->nullable(); // Deve ser nullable
-            $table->string('google_id')->nullable()->unique(); // Adicione AQUI
-            $table->string('avatar')->nullable();  // Adicione AQUI
+            $table->string('password')->nullable(); // Deve ser nullable para Google Sign-In
+            $table->string('google_id')->nullable()->unique(); // Adicionado
+            $table->string('avatar')->nullable(); // Adicionado
+            $table->string('registration_source')->nullable(); // Adicionado
+            $table->boolean('has_completed_questionnaire')->default(false); // Adicionado
+            $table->timestamp('last_login_at')->nullable(); // Adicionado
+            $table->string('registration_ip')->nullable(); // Adicionado
+            $table->json('preferences')->nullable(); // Adicionado
             $table->rememberToken();
             $table->timestamps();
         });
 
-        // Mantenha as outras tabelas, se você as usa:
+        // Mantenha as outras tabelas, se você as usa (e se elas não dependem da tabela users):
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');

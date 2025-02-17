@@ -23,9 +23,9 @@
             <template v-if="userStore.isAuthenticated">
                 <button @click="showProfileDropdown = !showProfileDropdown" type="button" class="flex items-center">
                     <!-- Placeholder se o usuário for null (correção) -->
-                    <img v-if="userStore.user" class="h-8 w-8 rounded-full object-cover" :src="userStore.user.avatar" :alt="userStore.user.name">
+                    <img v-if="userStore.user" class="h-8 w-8 rounded-full object-cover" :src="userStore.user.avatar" :alt="fullName">
                     <div v-else class="h-8 w-8 rounded-full bg-gray-300"></div>
-                    <span class="text-sm text-gray-700 font-medium ml-2">{{ userStore.user ? userStore.user.name : '' }}</span>
+                    <span class="text-sm text-gray-700 font-medium ml-2">{{ fullName }}</span>
                      <svg class="ml-1 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                     </svg>
@@ -94,9 +94,9 @@
            <template v-if="userStore.isAuthenticated">
                 <div class="flex items-center px-4 py-2">
                     <!-- Placeholder for avatar when user is null -->
-                    <img v-if="userStore.user" class="h-8 w-8 rounded-full object-cover" :src="userStore.user.avatar" :alt="userStore.user.name">
+                    <img v-if="userStore.user" class="h-8 w-8 rounded-full object-cover" :src="userStore.user.avatar" :alt="fullName">
                     <div v-else class="h-8 w-8 rounded-full bg-gray-300"></div>
-                    <span class="text-sm text-brand-700 ml-2">{{ userStore.user ? userStore.user.name: '' }}</span>
+                    <span class="text-sm text-brand-700 ml-2">{{ fullName }}</span>
                 </div>
             <button
               @click="handleLogout"
@@ -160,6 +160,14 @@ const handleLogout = () => {
   clearAuth();
   router.push({ name: 'login' }); // Redirect to the login page
 };
+
+// Computed property for full name
+const fullName = computed(() => {
+  if (userStore.user) {
+    return `${userStore.user.first_name} ${userStore.user.last_name}`;
+  }
+  return ''; // Or some default value
+});
 </script>
 
 <style scoped>

@@ -4,13 +4,13 @@ import { defineStore } from 'pinia';
 export const useUserStore = defineStore('user', {
   state: () => ({
     user: null,
-    token: null,
-    loading: false,
-    loadingCallbacks: [],
+    token: null, // Adicionado token
+    loading: false, //Removido, não estamos mais usando loading
+    loadingCallbacks: [], //Removido
   }),
   getters: {
-    isAuthenticated: (state) => !!state.user,
-    isLoading: (state) => state.loading,
+    isAuthenticated: (state) => !!state.user, // Mantido
+    // isLoading: (state) => state.loading, Removido
   },
   actions: {
     setUser(user) {
@@ -21,7 +21,7 @@ export const useUserStore = defineStore('user', {
         localStorage.removeItem('user');
       }
     },
-    setToken(token) {
+    setToken(token) { // Adicionada ação setToken
       this.token = token;
       if (token) {
         localStorage.setItem('auth_token', token);
@@ -31,28 +31,12 @@ export const useUserStore = defineStore('user', {
     },
     clearUser() {
       this.user = null;
-      this.token = null;
+      this.token = null; // Limpa o token
       localStorage.removeItem('user');
       localStorage.removeItem('auth_token');
     },
-    setLoading(value) {
-      this.loading = value;
-      if (!value) {
-        // When loading completes, execute all callbacks
-        this.loadingCallbacks.forEach(callback => callback());
-        this.loadingCallbacks = [];
-      }
-    },
-    onLoadingComplete(callback) {
-      if (!this.loading) {
-        // If not loading, execute immediately
-        callback();
-      } else {
-        // Otherwise, queue for execution when loading completes
-        this.loadingCallbacks.push(callback);
-      }
-    },
-    initialize() {
+    // Removido setLoading e onLoadingComplete
+    initialize() { // Mantido
       const savedUser = localStorage.getItem('user');
       const savedToken = localStorage.getItem('auth_token');
       if (savedUser) {
@@ -61,6 +45,6 @@ export const useUserStore = defineStore('user', {
       if (savedToken) {
         this.token = savedToken;
       }
-    }
+    },
   },
 });

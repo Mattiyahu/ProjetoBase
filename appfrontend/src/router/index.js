@@ -1,10 +1,10 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router';
-import { useUserStore } from '../stores/userStore'; // Importe o Pinia store aqui!
-import Home from '../components/Home.vue'; // Componente Home.vue
+import { useUserStore } from '../stores/userStore'; // Importe o Pinia store AQUI
+import Home from '../components/Home.vue';
 import Login from '../components/Login.vue';
 import Register from '../components/Register.vue';
-import About from '../components/About.vue';       // Importe os componentes
+import About from '../components/About.vue';
 import HowItWorks from '../components/HowItWorks.vue';
 import Content from '../components/Content.vue';
 import Recipes from '../components/Recipes.vue';
@@ -61,7 +61,7 @@ const router = createRouter({
                     path: '/recipes',
                     name: 'Recipes',
                     component: Recipes,
-                    meta: { requiresAuth: true }, // Proteja a rota
+                    meta: { requiresAuth: true },
                 },
                 {
                     path: '/contact',
@@ -76,16 +76,15 @@ const router = createRouter({
 
 
 router.beforeEach((to, from, next) => {
-    const userStore = useUserStore(); // Use o store *dentro* do beforeEach
+    const userStore = useUserStore();
 
-    if (to.meta.requiresAuth && !userStore.isAuthenticated) {
-        next({ name: 'login', query: { redirect: to.fullPath } });
-    } else if (to.meta.redirectIfAuthenticated && userStore.isAuthenticated) {
-        next({ name: 'dashboard' }); // Redireciona para o dashboard
-    } else {
-        next();
-    }
+  if (to.meta.requiresAuth && !userStore.isAuthenticated) {
+    next({ name: 'login', query: { redirect: to.fullPath } });
+  } else if (to.meta.redirectIfAuthenticated && userStore.isAuthenticated) {
+    next({ name: 'dashboard' });
+  } else {
+    next();
+  }
 });
-
 
 export default router;

@@ -19,7 +19,7 @@ class User extends Authenticatable
     protected $fillable = [
         'first_name',
         'last_name',
-        'full_name',
+        // 'full_name',  <-- REMOVA ISSO
         'email',
         'password',
         'google_id',
@@ -39,7 +39,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
-        'google_id',
+        'google_id', // Você *pode* querer esconder o google_id, mas não é obrigatório.
     ];
 
     /**
@@ -55,23 +55,23 @@ class User extends Authenticatable
         'preferences' => 'json',
     ];
 
-    /**
-     * Get the user's full name.
-     */
+    // REMOVA o método boot *completamente*:
+    /*
     protected static function boot()
     {
         parent::boot();
 
         static::creating(function ($user) {
             $user->name = trim($user->first_name . ' ' . $user->last_name);
-            $user->full_name = $user->name;
+            $user->full_name = $user->name; // REMOVA ESTA LINHA
         });
 
         static::updating(function ($user) {
             if ($user->isDirty(['first_name', 'last_name'])) {
                 $user->name = trim($user->first_name . ' ' . $user->last_name);
-                $user->full_name = $user->name;
+                $user->full_name = $user->name;// REMOVA ESTA LINHA
             }
         });
     }
+    */
 }
