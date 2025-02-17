@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -10,26 +9,32 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
      *
-     * @var list<string>
+     * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
+        'full_name',
         'email',
         'password',
         'google_id',
         'avatar',
+        'has_completed_questionnaire',
+        'registration_ip',
+        'registration_source',
+        'preferences',
+        'last_login_at'
     ];
 
     /**
      * The attributes that should be hidden for serialization.
      *
-     * @var list<string>
+     * @var array<int, string>
      */
     protected $hidden = [
         'password',
@@ -38,15 +43,35 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * The attributes that should be cast.
      *
-     * @return array<string, string>
+     * @var array<string, string>
      */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'has_completed_questionnaire' => 'boolean',
+        'last_login_at' => 'datetime',
+        'preferences' => 'json',
+    ];
+
+    /**
+     * Get the user's full name.
+     */
+    protected static function boot()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        parent::boot();
+
+        static::creating(function ($user) {
+            $user->name = trim($user->first_name . ' ' . $user->last_name);
+            $user->full_name = $user->name;
+        });
+
+        static::updating(function ($user) {
+            if ($user->isDirty(['first_name', 'last_name'])) {
+                $user->name = trim($user->first_name . ' ' . $user->last_name);
+                $user->full_name = $user->name;
+            }
+        });
     }
 }

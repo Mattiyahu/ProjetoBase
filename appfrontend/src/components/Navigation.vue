@@ -2,6 +2,7 @@
   <nav class="fixed w-full bg-brand-50 shadow-sm z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16">
+        <!-- Logo and Main Navigation -->
         <div class="flex">
           <router-link to="/" class="flex-shrink-0 flex items-center">
             <span class="text-2xl font-display font-bold">Ali<span class="text-accent-500">MENTE</span></span>
@@ -18,13 +19,21 @@
             </router-link>
           </div>
         </div>
+
+        <!-- Auth Buttons -->
         <div class="flex items-center">
-          <template v-if="userStore.isAuthenticated">
-            <div class="hidden sm:flex items-center space-x-4">
-              <span class="text-sm text-brand-700">{{ userStore.user.name }}</span>
+          <template v-if="isAuthenticated">
+            <div class="hidden sm:flex items-center space-x-6">
+              <span class="text-brand-700">Olá, {{ userName }}</span>
+              <router-link 
+                to="/recipes" 
+                class="text-brand-700 hover:text-accent-500 transition-colors duration-300"
+              >
+                Minhas Receitas
+              </router-link>
               <button 
                 @click="handleLogout" 
-                class="text-sm text-red-600 hover:text-red-800"
+                class="text-sm text-red-600 hover:text-red-800 transition-colors duration-300"
               >
                 Sair
               </button>
@@ -33,13 +42,13 @@
           <template v-else>
             <div class="hidden sm:flex items-center space-x-4">
               <router-link 
-                :to="{ path: '/login', query: { redirect: $route.fullPath } }" 
+                to="/login"
                 class="text-brand-700 hover:text-accent-500 transition-colors duration-300"
               >
                 Login
               </router-link>
               <router-link 
-                :to="{ path: '/register', query: { redirect: $route.fullPath } }" 
+                to="/register"
                 class="bg-accent-500 text-white px-6 py-2 rounded-lg hover:bg-accent-600 transition-all duration-300 shadow-md"
               >
                 Cadastro
@@ -62,7 +71,7 @@
       </div>
 
       <!-- Mobile menu -->
-      <div v-if="isMobileMenuOpen" class="sm:hidden animate-slide-down">
+      <div v-if="isMobileMenuOpen" class="sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
           <router-link 
             v-for="item in menuItems" 
@@ -70,12 +79,22 @@
             :to="item.path"
             class="block px-3 py-2 text-brand-700 hover:text-accent-500 transition-colors duration-300"
             :class="$route.path === item.path ? 'bg-accent-50' : ''"
-            @click="isMobileMenuOpen = false"
+            @click="closeMobileMenu"
           >
             {{ item.name }}
           </router-link>
-          <template v-if="userStore.isAuthenticated">
-            <div class="px-3 py-2 text-sm text-brand-700">{{ userStore.user.name }}</div>
+          
+          <template v-if="isAuthenticated">
+            <div class="px-3 py-2 text-brand-700">
+              Olá, {{ userName }}
+            </div>
+            <router-link 
+              to="/recipes"
+              class="block px-3 py-2 text-brand-700 hover:text-accent-500 transition-colors duration-300"
+              @click="closeMobileMenu"
+            >
+              Minhas Receitas
+            </router-link>
             <button 
               @click="handleLogout" 
               class="block w-full text-left px-3 py-2 text-sm text-red-600 hover:text-red-800"
@@ -85,16 +104,16 @@
           </template>
           <template v-else>
             <router-link 
-              :to="{ path: '/login', query: { redirect: $route.fullPath } }" 
+              to="/login"
               class="block px-3 py-2 text-brand-700 hover:text-accent-500 transition-colors duration-300"
-              @click="isMobileMenuOpen = false"
+              @click="closeMobileMenu"
             >
               Login
             </router-link>
             <router-link 
-              :to="{ path: '/register', query: { redirect: $route.fullPath } }" 
+              to="/register"
               class="block px-3 py-2 text-accent-500 hover:text-accent-600 transition-colors duration-300"
-              @click="isMobileMenuOpen = false"
+              @click="closeMobileMenu"
             >
               Cadastro
             </router-link>
@@ -105,54 +124,52 @@
   </nav>
 </template>
 
-<script>
+<script setup>
 import { ref, computed } from 'vue'
-import { userStore } from '../store/user'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '../store/userStore'
 import { clearAuth } from '../auth'
 
-export default {
-  name: 'Navigation',
-  setup() {
-    const isMobileMenuOpen = ref(false)
-    const allMenuItems = [
-      { name: 'Home', path: '/' },
-      { name: 'Sobre', path: '/about' },
-      { name: 'Como Funciona', path: '/how-it-works' },
-      { name: 'Conteúdo', path: '/content', requiresAuth: false },
-      { name: 'Receitas', path: '/recipes', requiresAuth: true },
-      { name: 'Contato', path: '/contact' }
-    ]
+const router = useRouter()
+const userStore = useUserStore()
+const isMobileMenuOpen = ref(false)
 
-    const menuItems = computed(() => 
-      allMenuItems.filter(item => {
-        if (!item.requiresAuth) return true;
-        return userStore.isAuthenticated;
-      })
-    )
+// Menu items
+const menuItems = [
+  { name: 'Home', path: '/' },
+  { name: 'Sobre', path: '/about' },
+  { name: 'Como Funciona', path: '/how-it-works' },
+  { name: 'Contato', path: '/contact' },
+  { name: 'Conteúdo', path: '/content', requiresAuth: true },
+  { name: 'Receitas', path: '/recipes', requiresAuth: true }
+]
 
-    const toggleMobileMenu = () => {
-      isMobileMenuOpen.value = !isMobileMenuOpen.value
-    }
+// Computed properties
+const isAuthenticated = computed(() => userStore.getAuthStatus)
+const userName = computed(() => {
+  const user = userStore.getUserProfile
+  return user ? user.name || user.email?.split('@')[0] || 'Usuário' : ''
+})
 
-    const handleLogout = () => {
-      clearAuth()
-      isMobileMenuOpen.value = false
-      window.location.href = '/login'
-    }
+// Methods
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value
+}
 
-    return {
-      userStore,
-      isMobileMenuOpen,
-      menuItems,
-      toggleMobileMenu,
-      handleLogout
-    }
-  }
+const closeMobileMenu = () => {
+  isMobileMenuOpen.value = false
+}
+
+const handleLogout = async () => {
+  clearAuth()
+  closeMobileMenu()
+  await router.push('/login')
 }
 </script>
 
 <style scoped>
-.animate-slide-down {
+/* Mobile menu animation */
+.sm\:hidden {
   animation: slideDown 0.2s ease-out;
 }
 
@@ -175,5 +192,10 @@ svg path {
 button:hover svg {
   transform: scale(1.1);
   transition: transform 0.2s ease-in-out;
+}
+
+/* Active link styles */
+.router-link-active {
+  @apply border-accent-500;
 }
 </style>

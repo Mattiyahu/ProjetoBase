@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-brand-50 to-accent-50 pt-32">
+  <div :key="$route.path" class="min-h-screen bg-gradient-to-br from-brand-50 to-accent-50 pt-32">
     <!-- Hero Section -->
     <section class="max-w-7xl mx-auto px-6 py-12">
       <div class="text-center mb-16">

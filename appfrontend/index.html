@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
@@ -33,16 +33,85 @@
     <!-- Preconnect to required origins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://accounts.google.com">
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+
+    <!-- Google Sign-In -->
+    <script src="https://accounts.google.com/gsi/client" async></script>
+
+    <!-- Prevent FOUC -->
+    <style>
+      .invisible {
+        opacity: 0;
+        visibility: hidden;
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    
     <!-- Skip to main content link for accessibility -->
-    <a href="#main-content" class="sr-only focus:not-sr-only">Pular para o conteúdo principal</a>
+    <a href="#main-content" class="sr-only focus:not-sr-only">
+      Pular para o conteúdo principal
+    </a>
+
+    <!-- Loading indicator -->
+    <div id="loading" class="fixed inset-0 flex items-center justify-center bg-brand-50 z-50">
+      <div class="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-accent-500"></div>
+    </div>
+
+    <!-- Main app container -->
+    <div id="app" class="invisible"></div>
+
+    <!-- Scripts -->
+    <script type="module" src="/src/main.js"></script>
+
+    <!-- Show app once loaded -->
+    <script>
+      // Function to initialize Google Sign-In
+      function initializeGoogleSignIn() {
+        if (window.google && window.google.accounts) {
+          window.google.accounts.id.initialize({
+            client_id: '1005562610644-ddstlt4qs99ejg4m0m8ui354hdoak5vb.apps.googleusercontent.com',
+            callback: (response) => {
+              // This will be handled by the components
+              console.log('Google Sign-In ready')
+            },
+            auto_select: false,
+            cancel_on_tap_outside: true
+          })
+        }
+      }
+
+      // Check if Google Sign-In is ready
+      function checkGoogleSignIn() {
+        if (window.google && window.google.accounts) {
+          initializeGoogleSignIn()
+          return true
+        }
+        return false
+      }
+
+      // Try to initialize Google Sign-In
+      let googleCheckAttempts = 0
+      const maxAttempts = 50 // 5 seconds
+      const googleCheckInterval = setInterval(() => {
+        if (checkGoogleSignIn() || ++googleCheckAttempts >= maxAttempts) {
+          clearInterval(googleCheckInterval)
+        }
+      }, 100)
+
+      // Show app once loaded
+      document.addEventListener('DOMContentLoaded', function() {
+        const app = document.getElementById('app')
+        const loading = document.getElementById('loading')
+        
+        // Show app and hide loading after a short delay
+        setTimeout(() => {
+          app.classList.remove('invisible')
+          loading.style.display = 'none'
+        }, 500)
+      })
+    </script>
   </body>
 </html>

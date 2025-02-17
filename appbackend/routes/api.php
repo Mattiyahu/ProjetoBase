@@ -15,9 +15,25 @@ use App\Http\Controllers\AuthController;
 |
 */
 
-
 // Authentication Routes
-Route::options('/auth/google', [AuthController::class, 'handleOptions']);
-Route::options('/auth/user', [AuthController::class, 'handleOptions']);
-Route::post('/auth/google', [AuthController::class, 'googleAuth']);
-Route::middleware('auth:sanctum')->get('/auth/user', [AuthController::class, 'getAuthenticatedUser']);
+Route::prefix('auth')->group(function () {
+    // Options for CORS preflight requests
+    Route::options('/{any}', [AuthController::class, 'handleOptions'])
+        ->where('any', '.*');
+
+    // Public routes
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/google', [AuthController::class, 'googleAuth']);
+    
+    // Protected routes
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/user', [AuthController::class, 'getAuthenticatedUser']);
+        Route::post('/logout', [AuthController::class, 'logout']);
+    });
+});
+
+// Handle CORS preflight requests for all routes
+Route::options('/{any}', function() {
+    return response()->json([], 200);
+})->where('any', '.*');
