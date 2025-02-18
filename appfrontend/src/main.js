@@ -1,23 +1,21 @@
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import './style.css'
-import './styles/global.css'
-import App from './App.vue'
-import router from './router/router.config'
+// src/main.js
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import App from './App.vue';
+import router from './router'; // Caminho simplificado (assume index.js)
+import './styles/global.css'; // Caminho para seus estilos globais
+import { initializeAuthGuard } from './middleware/auth'; // Caminho e nome CORRETOS
+import { useUserStore } from './stores/userStore'; // Importe o store
 
-// Create Vue app instance
-const app = createApp(App)
+const app = createApp(App);
+const pinia = createPinia();
 
-// Create Pinia instance
-const pinia = createPinia()
+app.use(pinia); // Pinia *antes* de qualquer coisa que use o store
+app.use(router);
 
-// Install plugins
-app.use(pinia) // Install Pinia first
-app.use(router)
-
-// Mount app when router is ready
-router.isReady().then(() => {
-  app.mount('#app')
-}).catch(error => {
-  console.error('Failed to initialize application:', error)
-})
+// Use .then() para garantir que initializeAuthGuard termine antes de montar o app
+initializeAuthGuard().then(() => {
+  const userStore = useUserStore(); // *Agora* você pode usar o store
+  userStore.initialize();         // Inicialize o store *aqui*  <-- DEVE SER initialize()
+  app.mount('#app');
+});

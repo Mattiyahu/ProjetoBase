@@ -3,7 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-
+use App\Http\Controllers\QuestionnaireController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -37,3 +37,9 @@ Route::prefix('auth')->group(function () {
 Route::options('/{any}', function() {
     return response()->json([], 200);
 })->where('any', '.*');
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/questionnaire', [QuestionnaireController::class, 'store']);
+    Route::get('/user/questionnaire-status', [QuestionnaireController::class, 'getStatus']); // Opcional
+    // Outras rotas protegidas...
+     Route::get('/auth/user', [AuthController::class, 'getAuthenticatedUser']);
+});

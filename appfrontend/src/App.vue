@@ -15,7 +15,8 @@ import { useUserStore } from './store/userStore'
 // Initialize store when app mounts
 onMounted(() => {
   const userStore = useUserStore()
-  userStore.initializeFromStorage()
+  userStore.initialize()
+
 })
 </script>
 

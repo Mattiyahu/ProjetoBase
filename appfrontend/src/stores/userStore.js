@@ -5,12 +5,9 @@ export const useUserStore = defineStore('user', {
   state: () => ({
     user: null,
     token: null, // Adicionado token
-    loading: false, //Removido, não estamos mais usando loading
-    loadingCallbacks: [], //Removido
   }),
   getters: {
-    isAuthenticated: (state) => !!state.user, // Mantido
-    // isLoading: (state) => state.loading, Removido
+    isAuthenticated: (state) => !!state.user,
   },
   actions: {
     setUser(user) {
@@ -21,7 +18,7 @@ export const useUserStore = defineStore('user', {
         localStorage.removeItem('user');
       }
     },
-    setToken(token) { // Adicionada ação setToken
+    setToken(token) { // Ação setToken
       this.token = token;
       if (token) {
         localStorage.setItem('auth_token', token);
@@ -35,8 +32,7 @@ export const useUserStore = defineStore('user', {
       localStorage.removeItem('user');
       localStorage.removeItem('auth_token');
     },
-    // Removido setLoading e onLoadingComplete
-    initialize() { // Mantido
+    initialize() {
       const savedUser = localStorage.getItem('user');
       const savedToken = localStorage.getItem('auth_token');
       if (savedUser) {

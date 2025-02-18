@@ -10,6 +10,7 @@ import Content from '../components/Content.vue';
 import Recipes from '../components/Recipes.vue';
 import Contact from '../components/Contact.vue';
 import MainLayout from '../layouts/MainLayout.vue'; // Importe o MainLayout
+import Questionnaire from '../components/Questionnaire.vue'
 
 
 const router = createRouter({
@@ -47,6 +48,12 @@ const router = createRouter({
                     component: () => import('../views/DashboardView.vue'), // lazy loading
                     meta: { requiresAuth: true },
                 },
+                {   //Rota do questionário
+                    path: '/questionnaire',
+                    name: 'questionnaire',
+                    component: Questionnaire,
+                    meta: { requiresAuth: true },
+                },
                 {
                     path: '/how-it-works',
                     name: 'HowItWorks',
@@ -80,6 +87,9 @@ router.beforeEach((to, from, next) => {
 
   if (to.meta.requiresAuth && !userStore.isAuthenticated) {
     next({ name: 'login', query: { redirect: to.fullPath } });
+//Se o usuário está autenticado, mas não completou o questionário, e não está indo para o questionário, redireciona para o questionário
+  } else if (userStore.isAuthenticated &&  !userStore.hasCompletedQuestionnaire && to.name !== 'questionnaire') {
+    next({ name: 'questionnaire' });
   } else if (to.meta.redirectIfAuthenticated && userStore.isAuthenticated) {
     next({ name: 'dashboard' });
   } else {
