@@ -24,14 +24,7 @@ class AuthController extends Controller
             $validator = Validator::make($request->all(), [
                 'firstName' => 'required|string|max:255',
                 'lastName' => 'required|string|max:255',
-                'email' => [
-                    'required',
-                    'string',
-                    'email',
-                    'max:255',
-                    'unique:users',
-                    'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/'
-                ],
+                'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:8|confirmed'
             ], [
                 'email.regex' => 'Por favor, use um email do Gmail (@gmail.com)',

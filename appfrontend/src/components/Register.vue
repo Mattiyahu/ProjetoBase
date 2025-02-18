@@ -8,6 +8,7 @@
       </div>
 
       <form @submit.prevent="handleRegister" class="space-y-6">
+        <!-- Campos do formulário -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label for="firstName" class="block text-sm font-medium text-brand-700 mb-2">Nome</label>
@@ -23,6 +24,7 @@
           </div>
         </div>
 
+        <!-- Demais campos (email, senha, confirmação de senha) -->
         <div>
           <label for="email" class="block text-sm font-medium text-brand-700 mb-2">Email</label>
           <input id="email" type="email" v-model="email" required
@@ -45,6 +47,7 @@
           </div>
         </div>
 
+        <!-- Termos de serviço -->
         <div class="flex items-start">
           <div class="flex items-center h-5">
             <input id="terms" type="checkbox" v-model="acceptTerms" required
@@ -60,20 +63,23 @@
           </div>
         </div>
 
+        <!-- Botão de submit -->
         <button type="submit"
           class="w-full bg-accent-500 text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-accent-600 transform hover:scale-105 transition-all duration-300 shadow-lg">
           Criar Conta
         </button>
 
+        <!-- Link para login -->
         <p class="text-center text-brand-600 mt-4">
           Já tem uma conta?
-          <router-link :to="{ path: '/login', query: { redirect: $route.query } }"
+          <router-link :to="{ path: '/login', query: $route.query }"
             class="text-accent-500 hover:text-accent-600 font-semibold">
             Faça login
           </router-link>
         </p>
       </form>
 
+      <!-- Login social -->
       <div class="mt-8">
         <div class="relative">
           <div class="absolute inset-0 flex items-center">
@@ -85,7 +91,6 @@
         </div>
 
         <div class="mt-6 flex justify-center">
-          <!-- Google Sign-In Button -->
           <div id="g_id_onload"
                :data-client_id="googleClientId"
                data-context="signup"
@@ -112,9 +117,10 @@
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import config from '../config';
-import { useUserStore } from '../stores/userStore'; // Pinia store
-import { setAuth } from '../auth'; // Importe a função setAuth
+import { useUserStore } from '../stores/userStore';
+import { setAuth } from '../auth';
 
+// Variáveis reativas
 const firstName = ref('');
 const lastName = ref('');
 const email = ref('');
@@ -124,36 +130,80 @@ const acceptTerms = ref(false);
 const error = ref(null);
 const googleClientId = ref(config.googleClientId);
 const router = useRouter();
-const userStore = useUserStore(); // Use o Pinia store
+const userStore = useUserStore();
 
+// Configuração do Google Sign-In
 onMounted(() => {
-    if (window.google && window.google.accounts && window.google.accounts.id) {
-        window.google.accounts.id.initialize({
-            client_id: googleClientId.value,
-            callback: handleCredentialResponse,
-        });
-        window.google.accounts.id.renderButton(
-            document.getElementById("g_id_signin"),
-            { theme: "outline", size: "large", text: "signup_with" }
-        );
-    } else {
-        console.error("Google Sign-In API not loaded");
-    }
+  if (window.google?.accounts?.id) {
+    window.google.accounts.id.initialize({
+      client_id: googleClientId.value,
+      callback: handleCredentialResponse,
+    });
+    window.google.accounts.id.renderButton(
+      document.getElementById("g_id_signin"),
+      { theme: "outline", size: "large", text: "signup_with" }
+    );
+  }
 });
 
+// Função de registro corrigida
+async function handleRegister() {
+  error.value = null;
+
+  if (password.value !== confirmPassword.value) {
+    error.value = 'As senhas não coincidem.';
+    return;
+  }
+
+  if (!acceptTerms.value) {
+    error.value = 'Você deve aceitar os Termos de Serviço e a Política de Privacidade.';
+    return;
+  }
+
+  try {
+    const response = await fetch(`${config.apiBaseUrl}/api/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        firstName: firstName.value,
+        lastName: lastName.value,
+        email: email.value,
+        password: password.value,
+        password_confirmation: confirmPassword.value,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      error.value = errorData.error || 'Erro ao criar conta. Verifique os dados informados.';
+      return;
+    }
+
+    const data = await response.json();
+    setAuth(data.token, data.user);
+    const redirect = router.currentRoute.value.query.redirect || '/dashboard';
+    router.push(redirect);
+
+  } catch (err) {
+    error.value = 'Erro ao conectar com o servidor.';
+    console.error('Erro no registro:', err);
+  }
+}
+
+// Funções do Google Sign-In mantidas
 async function handleCredentialResponse(response) {
-    try{
-        await verifyToken(response.credential);
-    }
-    catch (error){
-        error.value = error.message || 'Erro ao autenticar com o Google.';
-    }
+  try {
+    await verifyToken(response.credential);
+  } catch (err) {
+    error.value = err.message || 'Erro ao autenticar com o Google.';
+  }
 }
 
 async function verifyToken(token) {
   const apiUrl = config.apiBaseUrl + config.api.auth.google;
-  console.log('URL completa da requisição:', apiUrl);
-
   try {
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -166,13 +216,12 @@ async function verifyToken(token) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      error.value = errorData.message || `Erro ${response.status}: Resposta inválida do servidor.`; // Set more specific error
+      error.value = errorData.message || `Erro ${response.status}: Resposta inválida do servidor.`;
       return;
     }
 
     const data = await response.json();
-     // Armazena os dados de autenticação e redireciona
-    setAuth(data.token, data.user); // Use a função setAuth
+    setAuth(data.token, data.user);
     const redirect = router.currentRoute.value.query.redirect || '/dashboard';
     router.push(redirect);
 
@@ -181,22 +230,9 @@ async function verifyToken(token) {
     console.error('Authentication error:', err);
   }
 }
-
-function handleRegister() {
-  // TODO: Implement your email/password registration logic here (if you have it)
-    console.log('Registration attempt', {
-        firstName: firstName.value,
-        lastName: lastName.value,
-        email: email.value,
-        password: password.value,
-        acceptTerms: acceptTerms.value
-    })
-}
-
 </script>
 
 <style scoped>
-/* Form focus styles (optional, for better accessibility) */
 input:focus {
   outline: none;
 }
