@@ -38,6 +38,8 @@
           Entrar
         </button>
 
+        <div id="g_id_signin" class="mt-4"></div>
+
         <p class="text-center text-brand-600 mt-4">
           Não tem uma conta?
           <router-link :to="{ path: '/register', query: $route.query }"
@@ -46,8 +48,6 @@
           </router-link>
         </p>
       </form>
-
-      <!-- ... (Seu código para o Google Sign-In - MANTENHA) ... -->
     </div>
   </div>
 </template>
@@ -61,14 +61,13 @@ import { setAuth } from '../auth';
 
 const email = ref('');
 const password = ref('');
-const rememberMe = ref(false); // Você pode usar isso para implementar a funcionalidade "Lembrar-me"
+const rememberMe = ref(false);
 const error = ref(null);
-const googleClientId = ref(config.googleClientId); // Para o Google Sign-In
+const googleClientId = ref(config.googleClientId);
 const router = useRouter();
 const userStore = useUserStore();
 
 onMounted(() => {
-    // Inicializa o Google Sign-In (MANTENHA ISSO)
     if (window.google && window.google.accounts && window.google.accounts.id) {
         window.google.accounts.id.initialize({
             client_id: googleClientId.value,
@@ -82,88 +81,99 @@ onMounted(() => {
         console.error("Google Sign-In API not loaded");
     }
 });
-//Mantido
+
 async function handleCredentialResponse(response) {
-    try{
+    try {
         await verifyToken(response.credential);
-    }
-    catch(error){
+    } catch (error) {
         error.value = error.message || 'Erro ao autenticar com o Google.';
     }
 }
-//Mantido
+
 async function verifyToken(token) {
-  const apiUrl = config.apiBaseUrl + config.api.auth.google;
-  console.log('URL completa da requisição:', apiUrl);
+    const apiUrl = config.getApiUrl(config.api.auth.google);
+    console.log('URL completa da requisição:', apiUrl);
 
-  try {
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({ token }),
-    });
+    try {
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ token }),
+        });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      error.value = errorData.message || `Erro ${response.status}: Resposta inválida do servidor.`;
-      return;
+        if (!response.ok) {
+            const errorData = await response.json();
+            error.value = errorData.message || `Erro ${response.status}: Resposta inválida do servidor.`;
+            return;
+        }
+
+        const data = await response.json();
+        console.log('Google auth response:', data);
+        
+        if (!data.token) {
+            error.value = 'Token não recebido do servidor';
+            return;
+        }
+
+        setAuth(data.token, data.user);
+        const redirect = router.currentRoute.value.query.redirect || '/dashboard';
+        router.push(redirect);
+
+    } catch (err) {
+        error.value = 'Erro ao conectar com o servidor.';
+        console.error('Authentication error:', err);
     }
-
-    const data = await response.json();
-    setAuth(data.token, data.user);
-    const redirect = router.currentRoute.value.query.redirect || '/dashboard';
-    router.push(redirect);
-
-  } catch (err) {
-    error.value = 'Erro ao conectar com o servidor.';
-    console.error('Authentication error:', err);
-  }
 }
 
 async function handleLogin() {
-  error.value = null; // Limpa erros anteriores
+    error.value = null;
 
-  try {
-    const response = await fetch(config.apiBaseUrl + '/api/auth/login', { // URL correta
+    try {
+        const response = await fetch(config.getApiUrl(config.api.auth.login), {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                email: email.value,
+                password: password.value,
+            }),
+        });
 
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json', // Aceita JSON
-      },
-      body: JSON.stringify({
-        email: email.value,
-        password: password.value,
-        // remember: rememberMe.value,  // Você *pode* enviar isso, mas não é obrigatório para Sanctum
-      }),
-    });
+        if (!response.ok) {
+            const errorData = await response.json();
+            error.value = errorData.error || 'Erro ao fazer login. Verifique suas credenciais.';
+            return;
+        }
 
-    if (!response.ok) {
-      const errorData = await response.json(); // Pega os detalhes do erro do backend
-      error.value = errorData.error || 'Erro ao fazer login. Verifique suas credenciais.'; // Usa a mensagem de erro do backend
-      return;
+        const data = await response.json();
+        console.log('Login response:', data);
+        
+        if (!data.token) {
+            error.value = 'Token não recebido do servidor';
+            return;
+        }
+
+        setAuth(data.token, data.user);
+        const redirect = router.currentRoute.value.query.redirect || '/dashboard';
+        router.push(redirect);
+
+    } catch (err) {
+        error.value = 'Erro ao conectar com o servidor.';
+        console.error('Erro no login:', err);
     }
-
-    const data = await response.json();
-    setAuth(data.token, data.user); // Armazena o token *e* o usuário
-
-    // Redireciona para o dashboard ou para a página que o usuário tentou acessar antes de fazer login
-    const redirect = router.currentRoute.value.query.redirect || '/dashboard';
-    router.push(redirect);
-
-  } catch (err) {
-    error.value = 'Erro ao conectar com o servidor.';
-    console.error('Erro no login:', err);
-  }
 }
-
 </script>
 
 <style scoped>
-/* Seus estilos (opcional) */
 input:focus {
   outline: none;
 }

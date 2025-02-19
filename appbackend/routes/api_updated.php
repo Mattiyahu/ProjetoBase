@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\QuestionnaireController;
-use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SurveyController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,6 +17,24 @@ use App\Http\Controllers\DashboardController;
 |
 */
 
+// Authentication Routes
+Route::prefix('auth')->group(function () {
+    // Options for CORS preflight requests
+    Route::options('/{any}', [AuthController::class, 'handleOptions'])
+        ->where('any', '.*');
+
+    // Public routes
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/google', [AuthController::class, 'googleAuth']);
+    
+    // Protected routes
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/user', [AuthController::class, 'getAuthenticatedUser']);
+        Route::post('/logout', [AuthController::class, 'logout']);
+    });
+});
+
 // Handle CORS preflight requests for all routes
 Route::options('/{any}', function() {
     return response()->json([], 200, [
@@ -27,32 +45,17 @@ Route::options('/{any}', function() {
     ]);
 })->where('any', '.*');
 
-// Authentication Routes
-Route::prefix('auth')->group(function () {
-    // Public routes
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/google', [AuthController::class, 'googleAuth']);
-    
-    // Protected routes
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::get('/user', [AuthController::class, 'getUser']);
-        Route::post('/logout', [AuthController::class, 'logout']);
-    });
-});
-
 // Protected Routes
 Route::middleware('auth:sanctum')->group(function () {
     // User Routes
     Route::prefix('user')->group(function () {
-        // Questionnaire Routes
-        Route::get('/questionnaire', [QuestionnaireController::class, 'getQuestions']);
         Route::post('/questionnaire', [QuestionnaireController::class, 'store']);
         Route::get('/questionnaire-status', [QuestionnaireController::class, 'getStatus']);
     });
 
-    // Dashboard Routes
-    Route::prefix('dashboard')->group(function () {
-        Route::get('/responses', [DashboardController::class, 'getUserResponses']);
-    });
+    // Survey Routes
+    Route::get('/survey/{section}', [SurveyController::class, 'getQuestions']);
+    Route::post('/survey/submit', [SurveyController::class, 'submitResponse']);
+    
+    Route::get('/auth/user', [AuthController::class, 'getAuthenticatedUser']);
 });

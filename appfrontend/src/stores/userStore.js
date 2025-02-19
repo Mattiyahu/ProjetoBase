@@ -4,10 +4,11 @@ import { defineStore } from 'pinia';
 export const useUserStore = defineStore('user', {
   state: () => ({
     user: null,
-    token: null, // Adicionado token
+    token: null,
   }),
   getters: {
     isAuthenticated: (state) => !!state.user,
+    hasCompletedQuestionnaire: (state) => state.user?.has_completed_questionnaire || false,
   },
   actions: {
     setUser(user) {
@@ -18,7 +19,7 @@ export const useUserStore = defineStore('user', {
         localStorage.removeItem('user');
       }
     },
-    setToken(token) { // Ação setToken
+    setToken(token) {
       this.token = token;
       if (token) {
         localStorage.setItem('auth_token', token);
@@ -28,7 +29,7 @@ export const useUserStore = defineStore('user', {
     },
     clearUser() {
       this.user = null;
-      this.token = null; // Limpa o token
+      this.token = null;
       localStorage.removeItem('user');
       localStorage.removeItem('auth_token');
     },
@@ -42,5 +43,17 @@ export const useUserStore = defineStore('user', {
         this.token = savedToken;
       }
     },
+    updateUser(userData) {
+      if (this.user) {
+        this.user = { ...this.user, ...userData };
+        localStorage.setItem('user', JSON.stringify(this.user));
+      }
+    },
+    setQuestionnaireCompleted(completed) {
+      if (this.user) {
+        this.user.has_completed_questionnaire = completed;
+        localStorage.setItem('user', JSON.stringify(this.user));
+      }
+    }
   },
 });

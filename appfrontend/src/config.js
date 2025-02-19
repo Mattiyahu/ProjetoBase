@@ -21,11 +21,8 @@ const config = {
             preferences: '/api/user/preferences',
             settings: '/api/user/settings'
         },
-        recipes: {
-            list: '/api/recipes',
-            detail: '/api/recipes/:id',
-            favorites: '/api/recipes/favorites',
-            categories: '/api/recipes/categories'
+        dashboard: {
+            responses: '/api/dashboard/responses'
         }
     },
     routes: {
@@ -40,8 +37,8 @@ const config = {
         privacy: '/privacy',
         
         // Protected routes
-        welcome: '/welcome',
-        recipes: '/recipes',
+        dashboard: '/dashboard',
+        questionnaire: '/questionnaire',
         profile: '/profile',
         settings: '/settings'
     },
@@ -63,7 +60,7 @@ const config = {
     },
     // Helper function to check if route requires auth
     requiresAuth: (routeName) => {
-        const protectedRoutes = ['welcome', 'recipes', 'profile', 'settings']
+        const protectedRoutes = ['dashboard', 'questionnaire', 'profile', 'settings']
         return protectedRoutes.includes(routeName)
     }
 }

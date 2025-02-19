@@ -42,18 +42,17 @@ class AuthController extends Controller
                 ], 422);
             }
 
-            //CORREÇÂO AQUI: use first_name e last_name, e remova registration_source e name
             $userData = [
                 'first_name' => trim($request->firstName),
                 'last_name' => trim($request->lastName),
                 'email' => strtolower(trim($request->email)),
                 'password' => Hash::make($request->password),
-                'registration_ip' => $request->ip(),  // Mantenha isso
-                'last_login_at' => now(), // Mantenha isso
-                'has_completed_questionnaire' => false, // Mantenha isso
+                'registration_ip' => $request->ip(),
+                'last_login_at' => now(),
+                'has_completed_questionnaire' => false,
             ];
 
-            Log::info('Creating user with data:', $userData); // Não precisa mais esconder a senha
+            Log::info('Creating user with data:', $userData);
 
             $user = User::create($userData);
 
@@ -85,17 +84,13 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        // ... (o seu método login parece correto, mas adicione logs se precisar) ...
         try {
             $validator = Validator::make($request->all(), [
                 'email' => [
                     'required',
                     'email',
-                    'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/'
                 ],
                 'password' => 'required|string'
-            ], [
-                'email.regex' => 'Por favor, use um email do Gmail (@gmail.com)',
             ]);
 
             if ($validator->fails()) {
@@ -125,7 +120,8 @@ class AuthController extends Controller
             return response()->json(['error' => 'Erro ao fazer login'], 500);
         }
     }
-     public function logout(Request $request)
+
+    public function logout(Request $request)
     {
         try {
             $request->user()->currentAccessToken()->delete();
@@ -138,7 +134,6 @@ class AuthController extends Controller
             return response()->json(['error' => 'Erro ao fazer logout'], 500);
         }
     }
-
 
     public function googleAuth(Request $request)
     {
@@ -164,11 +159,18 @@ class AuthController extends Controller
 
                 if ($user) {
                     Log::debug('5. Entrou no IF (usuário existente)');
-					$user->last_login_at = now(); // Atualiza o last_login_at
+                    $user->last_login_at = now();
                     $user->save();
                     Auth::login($user);
+                    
+                    // Create token for existing user
+                    $token = $user->createToken('auth_token')->plainTextToken;
+                    
                     Log::debug('6. Usuário autenticado com sucesso (usuário existente).');
-                    return response()->json(['user' => $user], 200);
+                    return response()->json([
+                        'user' => $user,
+                        'token' => $token
+                    ], 200);
 
                 } else {
                     Log::debug('5. Entrou no ELSE (usuário não encontrado)');
@@ -190,25 +192,31 @@ class AuthController extends Controller
                         return response()->json(['error' => 'Erro de validação', 'messages' => $validator->errors()], 422);
                     }
 
-                    // CORREÇÃO AQUI: use first_name e last_name, e remova registration_source e name
                     $user = User::create([
-                        'first_name' => $payload['given_name'], // Usa given_name do payload
-                        'last_name'  => $payload['family_name'] ?? '', // Usa family_name do payload
+                        'first_name' => $payload['given_name'],
+                        'last_name'  => $payload['family_name'] ?? '',
                         'email' => $payload['email'],
                         'google_id' => $userid,
                         'avatar' => $payload['picture'],
-                        'password' => bcrypt(uniqid()), // Senha aleatória (obrigatório, mas não usado com Google Sign-In)
-                        'registration_ip' => $request->ip(), // Adiciona o IP de registro
-                        'registration_source' => 'google',  // Define a fonte de registro
-                        'last_login_at' => now(), // Define a data do último login
-                        'has_completed_questionnaire' => false, // Define como falso por padrão
+                        'password' => bcrypt(uniqid()),
+                        'registration_ip' => $request->ip(),
+                        'registration_source' => 'google',
+                        'last_login_at' => now(),
+                        'has_completed_questionnaire' => false,
                     ]);
 
                     Log::debug('7. Novo usuário criado:', ['user' => $user]);
 
                     Auth::login($user);
+                    
+                    // Create token for new user
+                    $token = $user->createToken('auth_token')->plainTextToken;
+                    
                     Log::debug('8. Usuário novo autenticado com sucesso.');
-                    return response()->json(['user' => $user], 200);
+                    return response()->json([
+                        'user' => $user,
+                        'token' => $token
+                    ], 200);
                 }
             } else {
                 Log::error('Token inválido do Google.');
@@ -227,28 +235,26 @@ class AuthController extends Controller
         Log::debug('-------- FIM DA REQUISIÇÃO GOOGLE AUTH --------');
     }
 
-
-    //Se quiser adicionar um novo metodo para lidar com os OPTIONS, adicione isto
     public function handleOptions()
     {
         return response()->json([], 200);
     }
-     /**
-     * Get the authenticated User.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function getAuthenticatedUser(Request $request)
+
+    public function getUser(Request $request)
     {
         try {
             $user = Auth::user();
 
-            if (! $user) {
+            if (!$user) {
                 return response()->json(['message' => 'Usuário não autenticado'], 401);
             }
 
             return response()->json(['user' => $user], 200);
         } catch (\Exception $e) {
+            Log::error('Error getting user:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json(['message' => 'Erro ao obter usuário autenticado', 'error' => $e->getMessage()], 500);
         }
     }
